@@ -1,40 +1,65 @@
 <template>
   <div class="user-todos" v-if="myName">
     <section>
-    <header>
-      <button @click="onBack">Back</button>
-      <h4>{{ `${myName}'s ToDo List` }}</h4>
-    </header>
-        <label v-if="myName" for="addToDo">
-      <input
-        id="addToDo"
-        v-model="model.title"
-        placeholder="Add to your list"
-        @keypress.enter="addToDo"
-      />
-      <button @click="addToDo">Add</button>
-    </label>
-    <ul>
-      <li v-if="!(ToDos.length > 0)">Add something to the list</li>
-      <li v-else v-for="todo in ToDos.filter(x => !x.completed)" :key="todo.id">
-        <label :for="todo.id">
-          {{ todo.title }}
-          <input :id="todo.id" type="checkbox" :checked="todo.completed" @click="updateToDo(todo)" />
-        </label>
-        <button @click="deleteToDo(todo)">x</button>
-      </li>
-    </ul>
-    <ul class="user-todos-completed">
-      <li v-for="todo in ToDos.filter(x => x.completed)" :key="todo.id">
-        <label :for="todo.id">
-          {{ todo.title }}
-          <input :id="todo.id" type="checkbox" :checked="todo.completed" @click="updateToDo(todo)" />
-        </label>
-        <button @click="deleteToDo(todo)">x</button>
-      </li>
-    </ul>
+      <header>
+        <v-btn grey @click="onBack">Back</v-btn>
+        <h4>{{ `${myName}'s ToDo List` }}</h4>
+      </header>
+      <v-list>
+        <v-list-item>
+          <v-list-item-content>
+            <v-text-field
+              v-if="myName"
+              class="pt-3"
+              v-model="model.title"
+              required="required"
+              :rules="msg"
+              label="Add to your list'"
+              @keyup.enter="addToDo"
+              outlined
+              clearable
+            ></v-text-field>
+          </v-list-item-content>
+          <v-list-item-action>
+            <v-btn class="mb-4" @click="addToDo">Submit</v-btn>
+          </v-list-item-action>
+        </v-list-item>
+      </v-list>
+
+      <v-card class="mx-auto" max-width="500">
+        <v-list shaped>
+          <v-list-item-group v-model="model" multiple v-for="n in [0,1]" :key="n">
+            <v-divider v-if="n == 1"></v-divider>
+            <template v-for="todo in ToDos.filter(x => x.completed == n).reverse()">
+              <v-list-item
+                :key="todo.id"
+                :value="todo"
+                active-class="deep-purple--text text--accent-4"
+              >
+                <template v-slot:default="{ active, toggle }">
+                  <v-list-item-content>
+                    <v-list-item-title v-text="todo.title"></v-list-item-title>
+                  </v-list-item-content>
+                  <v-list-item-action>
+                    <v-checkbox
+                      :input-value="todo.completed"
+                      :true-value="todo.completed"
+                      color="deep-purple accent-4"
+                      @click="updateToDo(todo)"
+                    ></v-checkbox>
+                  </v-list-item-action>
+                  <v-list-item-action>
+                    <v-btn dark icon ripple color="red" @click="deleteToDo(todo)">
+                      <v-icon color="red" class="white--text">x</v-icon>
+                    </v-btn>
+                  </v-list-item-action>
+                </template>
+              </v-list-item>
+            </template>
+          </v-list-item-group>
+        </v-list>
+      </v-card>
     </section>
-    
   </div>
 </template>
 
@@ -69,7 +94,7 @@ export default class Users extends Vue {
 
   get CompletedCount(): string {
     let count = this.ToDos.filter(x => x.completed).length;
-    return count > 0 ? `${count} completed.` : '';
+    return count > 0 ? `${count} completed.` : "";
   }
 
   @Emit("onBack")
@@ -80,14 +105,14 @@ export default class Users extends Vue {
   @Watch("User")
   public onUserChanged(user: UserModel) {
     if (user !== undefined && user !== null) {
-      console.log('onUserChanged', user);
-      store.dispatch('getUserToDos', user.id);
+      console.log("onUserChanged", user);
+      store.dispatch("getUserToDos", user.id);
     }
   }
 
   @Watch("myName")
   public onMyNameChanged(name: string) {
-    store.dispatch('getUser', name);
+    store.dispatch("getUser", name);
   }
 
   public addToDo() {
@@ -96,7 +121,7 @@ export default class Users extends Vue {
   }
 
   public deleteToDo(todo: ToDoModel) {
-    if(confirm(`remove ${todo.title}?`)) store.dispatch('deleteToDo', todo);
+    if (confirm(`remove ${todo.title}?`)) store.dispatch("deleteToDo", todo);
   }
 
   public updateToDo(todo: ToDoModel) {
@@ -106,14 +131,13 @@ export default class Users extends Vue {
     mockTodo.title = todo.title;
     mockTodo.completed = !todo.completed;
     //disable while posting.
-    store.dispatch('updateToDo', mockTodo);
+    store.dispatch("updateToDo", mockTodo);
   }
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
-
 .user-todos {
   display: flex;
   justify-content: space-evenly;
@@ -122,8 +146,8 @@ export default class Users extends Vue {
   .user-todos-completed {
     &:not(:empty) {
       border-top: 1px solid black;
-      &::before{
-        content: 'Completed:';
+      &::before {
+        content: "Completed:";
         display: block;
         padding-top: 16px;
       }
@@ -146,5 +170,8 @@ export default class Users extends Vue {
   li + li {
     padding-top: 8px;
   }
+}
+.done {
+  text-decoration: line-through;
 }
 </style>
